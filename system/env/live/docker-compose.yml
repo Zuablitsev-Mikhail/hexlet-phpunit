@@ -1,0 +1,56 @@
+# Mark Shust's Docker Configuration for Magento (https://github.com/markshust/docker-magento)
+# Version 23.2.3
+
+version: "3"
+
+services:
+  phpfpm:
+    build: ./docker/php
+    restart: always
+#    ports:
+#      - 9000:9000
+    networks:
+      - parfum
+    volumes: &appvolumes
+      - ~/.composer:/var/www/.composer:delegated
+      - ./shared-files/ssl-cert:/var/www/ssl-cert
+      - ./shared-files/logs/php:/var/log/php
+      - ./src:/var/www/html
+      - /mnt/HC_Volume_8070446/parfum/shared/media/:/var/www/html/pub/media
+      - /mnt/HC_Volume_8070446/parfum/shared/static/:/var/www/html/pub/static
+  #      - ../../parfum/file_data/pub/media/livestatic/:/var/www/html/pub/static
+  #      - ../../parfum/file_data/pub/media/live_generated/:/var/www/html/generated
+  #      - ../../parfum/file_data/pub/media/sessions/:/var/www/session
+  #      - ../../parfum/file_data/pub/media/var/tmp:/var/www/html/var/tmp
+  #      - ../../parfum/file_data/pub/media/env.php:/var/www/html/app/etc/env.php
+  #      - ../../parfum/file_data/pub/media/config.php:/var/www/html/app/etc/config.php
+
+  # Disabling cron by default as it uses higher CPU, enable if needed
+#  cron:
+#    build: ./docker/php
+#    restart: always
+#    user: root
+#    networks:
+#      - parfum
+#    command: /usr/local/bin/cronstart
+#    tty: true
+#    volumes: *appvolumes
+
+  app:
+    build: ./docker/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    #      - "8080:443"
+    volumes: &appvolumes
+      - ~/.composer:/var/www/.composer:delegated
+      - ./shared-files/ssl-cert:/var/www/ssl-cert
+      - ./shared-files/logs/nginx:/var/log/nginx
+      - ./src:/var/www/html
+      - /mnt/HC_Volume_8070446/parfum/shared/media/:/var/www/html/pub/media
+      - /mnt/HC_Volume_8070446/parfum/shared/static/:/var/www/html/pub/static
+    networks:
+      - parfum
+
+networks:
+  parfum:

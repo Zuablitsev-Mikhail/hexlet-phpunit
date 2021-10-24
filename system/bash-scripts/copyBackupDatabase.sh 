@@ -1,0 +1,1 @@
+find ~/parfum/backup/database/* -mtime -7  -exec rsync -azvh {} /mnt/backup-server/backup-<name>/ \; && find /mnt/backup-server/backup-<name>/* -mtime +6 -exec rm -f {} \;

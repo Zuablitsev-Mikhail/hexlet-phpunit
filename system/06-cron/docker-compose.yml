@@ -1,0 +1,26 @@
+# Mark Shust's Docker Configuration for Magento (https://github.com/markshust/docker-magento)
+# Version 23.2.3
+
+version: "3"
+
+services:
+  # Disabling cron by default as it uses higher CPU, enable if needed
+  cron:
+    build: ./docker/php
+    restart: always
+#    image: markoshust/magento-php:7.2-fpm-3
+    networks:
+      - parfum
+    user: root
+    command: /usr/local/bin/cronstart
+    tty: true
+    volumes: &appvolumes
+      - ~/.composer:/var/www/.composer:delegated
+      - ../../shared-files/ssl-cert:/var/www/ssl-cert
+      - ../../shared-files/logs/php:/var/log/php
+      - ../../src:/var/www/html
+      - ../../parfum/file_data/pub/media/:/var/www/html/pub/media
+      - ../../parfum/file_data/pub/static/:/var/www/html/pub/static
+
+networks:
+  parfum:

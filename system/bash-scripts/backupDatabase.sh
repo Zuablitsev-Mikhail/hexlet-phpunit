@@ -1,0 +1,1 @@
+mysqldump -u<mysqlUser> -p'<mysqlPassword>' --host 127.0.0.1 --port 8002 magento2 --single-transaction --quick --lock-tables=false | gzip -9 > ~/parfum/backup/database/$(date +%d.%m.%Y-%H-%I-%S).db.sql.gz

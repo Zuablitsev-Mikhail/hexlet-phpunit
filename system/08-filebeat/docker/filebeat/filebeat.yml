@@ -1,0 +1,97 @@
+name: "parfuemerie-server"
+tags: ["parfuemerie","prod"]
+
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+filebeat.inputs:
+  
+  - type: log
+    paths:
+      - "/var/log/import/*/*/*/*.log"
+    ignore_older: 0
+    encoding: utf-8
+    tags: ["wls","import"]
+  
+  - type: log
+    paths:
+      - "/var/log/system/syslog*"
+    ignore_older: 0
+    encoding: utf-8
+    tags: ["system","syslog"]
+  
+  - type: log
+    paths:
+      - "/var/log/system/auth.log*"
+    ignore_older: 0
+    encoding: utf-8
+    tags: ["system","auth"]
+  
+  - type: log
+    paths:
+      - /var/log/nginx/access.log
+      - /var/log/nginx/b2b.parfuemerie.access.log
+    ignore_older: 0
+    encoding: utf-8
+    tags: ["wls","nginx","access"]
+  
+  - type: log
+    paths:
+      - /var/log/nginx/error.log
+      - /var/log/nginx/b2b.parfuemerie.error.log
+    ignore_older: 0
+    encoding: utf-8
+    tags: ["wls","nginx","error"]
+  
+  - type: log
+    paths:
+      - /var/log/php/cli-error.log
+    ignore_older: 0
+    encoding: utf-8
+    tags: ["wls","php","cli-error"]
+  
+  - type: log
+    paths:
+      - /var/log/php/slow-fpm.log
+    ignore_older: 0
+    encoding: utf-8
+    tags: ["wls","php","slow-fpm"]
+
+  - type: log
+    paths:
+      - /var/log/php/fpm-error.log
+    ignore_older: 0
+    encoding: utf-8
+    tags: ["wls","php","fpm-error"]
+
+  - type: log
+    paths:
+      - "/var/log/parfum/*.log"
+    ignore_older: 0
+    encoding: utf-8
+    tags: ["wls","magento"]
+
+processors:
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+
+output.elasticsearch:
+  enabled: false
+
+output.logstash:
+  enabled: true
+  hosts: ["168.119.228.39:5044"]
+  bulk_max_size: 256
+
+logging.level: error
+logging.to_files: false
+logging.to_syslog: false
+loggins.metrice.enabled: false
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+ssl.verification_mode: none

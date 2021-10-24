@@ -1,0 +1,18 @@
+STG_SERVER_IP="188.40.128.84"
+STG_SERVER_PORT="5022"
+STG_SERVER_USER="intexsoft"
+
+STG_PROJECT_PATH="/home/intexsoft/07-neo-api/app"
+STG_SERVER_DOMAIN="https://test-parfuemerie.intexsoft.com/"
+
+SLACK_CHANEL_TOKEN="LIcO3FGDD72kMkAN3dGENzjj"
+SLACK_WEBHOOK_URL="https://hooks.slack.com/services/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"
+SLACK_CHANNEL="#wls-deploy"
+SLACK_NAME="WLS-PARFUM"
+
+EMOJI_GHOST=":alien:"
+EMOJI_HANKEY=":hankey:"
+
+DOCKER_COMPOSE="docker-compose -f docker-compose.yml"
+MAGENTO="docker-compose -f docker-compose.yml exec -T phpfpm bin/magento "
+COMPOSER="docker-compose -f docker-compose.yml exec -T phpfpm composer "

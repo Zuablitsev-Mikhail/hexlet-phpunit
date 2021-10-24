@@ -1,0 +1,15 @@
+# Version 1.0 intexsoft.com
+version: "3"
+
+services:
+
+  redis-session:
+    image: redis:5.0
+    restart: always
+    ports:
+      - 6379:6379
+    networks:
+      - parfum
+
+networks:
+  parfum:

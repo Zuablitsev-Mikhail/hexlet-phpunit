@@ -1,0 +1,43 @@
+# Version 1.0.1 Staging
+
+version: "3"
+
+services:
+  app:
+    build: ./system/07-nginx/docker/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    #    links:
+    #      - db
+    #      - phpfpm
+    #      - redis
+    #    depends_on:
+    #      - redis
+    volumes:
+      - ~/.composer:/var/www/.composer:delegated
+      - ./shared-files/ssl-cert:/var/www/ssl-cert
+      - ./shared-files/logs/nginx:/var/log/nginx
+      - ./src:/var/www/html
+      - ./shared-files/media:/var/www/html/pub/media
+    environment:
+      - PHP_HOST=87.106.193.207
+      - PHP_PORT=9000
+      #- APP_MAGE_MODE default
+      #- APP_MAGE_MODE developer
+      - APP_MAGE_MODE=production
+      - APP_MAGE_RUN_TYPE=website
+      - APP_DEFAULT_MAGE_RUN_CODE=base
+      - APP_BASE_SERVER_NAME=www.test-parfuemerie.intexsoft.com
+      - APP_DEFAULT_SERVER_NAME=test-parfuemerie.intexsoft.com
+      - APP_B2B_MAGE_RUN_CODE=b2b
+      - APP_B2B_SERVER_NAME=b2b-parfuemerie-stg.intexsoft.by
+      - B2C_CERT_FILE=parfuemerie-stg.intexsoft.by.crt
+      - B2C_CERT_KEY=parfuemerie-stg.intexsoft.by.key
+      - B2B_CERT_FILE=b2b.parfuemerie-stg.intexsoft.by.crt
+      - B2B_CERT_KEY=b2b.parfuemerie-stg.intexsoft.by.key
+    networks:
+      - frontend
+
+networks:
+  frontend:
