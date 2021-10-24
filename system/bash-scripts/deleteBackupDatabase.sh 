@@ -1,0 +1,1 @@
+find ~/parfum/backup/database/* -type f \( ! -name "01*" -a ! -name "10*" -a ! -name "20*" -a ! -name "30*" \) -mtime +6 -exec rm {} \;

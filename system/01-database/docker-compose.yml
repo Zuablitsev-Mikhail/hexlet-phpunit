@@ -1,0 +1,19 @@
+# Version 1.0 intexsoft.com
+version: "3"
+
+services:
+  db:
+    build: ./docker/mysql
+    restart: always
+    networks:
+      - parfum
+    ports:
+      - "8002:3306"
+    env_file: docker/mysql/db.env
+    volumes:
+      - ../../shared-files/logs/mysql:/var/log/mysql
+      - ../../shared-files/database:/var/lib/mysql
+      - ../../shared-files/dump/:/tmp/dump
+
+networks:
+  parfum:

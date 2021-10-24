@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  #crowdsec : it will be fed system's logs, nginx logs
+  #and later we're going to plug a firewall bouncer to it
+  crowdsec:
+    build: ./docker
+    restart: always
+    environment:
+      #this is the list of collections we want to install
+      COLLECTIONS: "crowdsecurity/sshd crowdsecurity/linux crowdsecurity/nginx crowdsecurity/whitelist-good-actors"
+      #this is the list of parsers we want to install
+      PARSERS: "crowdsecurity/whitelists crowdsecurity/dateparse-enrich crowdsecurity/geoip-enrich"
+      GID: "${GID-1000}"
+    volumes:
+      - ./docker/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml
+      - ./docker/crowdsec/my-whitelists.yaml:/etc/crowdsec/parsers/s02-enrich/my-whitelists.yaml
+      - /var/log/:/var/log/system/
+      - /home/intexsoft/parfum/app/shared-files/logs/nginx:/var/log/nginx
+      - crowdsec-db:/var/lib/crowdsec/data/
+      - crowdsec-config:/etc/crowdsec/
+    networks:
+      crowdsec:
+        ipv4_address: 172.20.0.4
+  
+  #metabase, because security is cool, but dashboards are cooler
+  dashboard:
+    #we're using a custom Dockerfile so that metabase pops with pre-configured dashboards
+    build: ./docker/crowdsec/dashboard
+    restart: always
+    ports:
+      - 3000:3000
+    environment:
+      MB_DB_FILE: /data/metabase.db
+      MGID: "${GID-1000}"
+    depends_on:
+      - 'crowdsec'
+    volumes:
+      - crowdsec-db:/metabase-data/
+    networks:
+      crowdsec:
+        ipv4_address: 172.20.0.5
+
+volumes:
+  crowdsec-db:
+  crowdsec-config:
+
+networks:
+  crowdsec:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/24

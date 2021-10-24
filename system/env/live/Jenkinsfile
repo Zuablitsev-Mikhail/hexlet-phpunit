@@ -1,0 +1,177 @@
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Deploy') {
+            steps {
+                load './system/env/live/.jenkinsenv'
+                sendMessage("Кручу-верчу, сервер ${STG_SERVER_DOMAIN} обновить хочу", "${EMOJI_GHOST}")
+    //            sendMessage(getLastCommitMessage(),"${EMOJI_GHOST}")
+                executeOnServer("${MAGENTO} maintenance:enable")
+                executeOnServer("${DOCKER_COMPOSE} stop cron")
+                executeOnServer("git pull")
+                executeOnServer("${COMPOSER} install -o ")
+            }
+        }
+
+        stage('Build') {
+            stages {
+                stage('Module update') {
+                    steps {
+                        sendMessage("Настраиваю модули", "${EMOJI_GHOST}")
+                        executeOnServer("${MAGENTO} setup:upgrade")
+                    }
+                }
+                stage('Compile') {
+                    failFast true
+                    parallel {
+                        stage('Dependency compile') {
+                            steps {
+                                sendMessage("Собираю все в кучу ", "${EMOJI_GHOST}")
+                                executeOnServer("${MAGENTO} setup:di:compile")
+                                sendMessage("Включаю кеширование", "${EMOJI_GHOST}")
+                                executeOnServer("${MAGENTO} cache:enable")
+                                executeOnServer("${MAGENTO} cache:flush")
+                            }
+                        }
+                        stage('Static content') {
+                            steps {
+                                sendMessage("Клепаю статику", "${EMOJI_GHOST}")
+                                executeOnServer("${MAGENTO} setup:static-content:deploy de_DE en_US")
+                            }
+                        }
+                    }
+                }
+                stage('Complete') {
+                    steps {
+                        sendMessage("Строю новые связи", "${EMOJI_GHOST}")
+                        //                 executeOnServer("${MAGENTO}o indexer:reset")
+                        //                 executeOnServer("${MAGENTO} indexer:reindex")
+                        executeOnServer("${DOCKER_COMPOSE} start cron")
+
+                        sendMessage("Старт через 3 2 1", "${EMOJI_GHOST}")
+                        executeOnServer("${MAGENTO} maintenance:disable")
+                        sendMessage("Трах, тибидох тибидох - мы в эфире", "${EMOJI_GHOST}")
+                    }
+                }
+            }
+        }
+
+        stage('Speed UP') {
+            failFast false
+            parallel {
+                stage('Main Pages') {
+                    steps {
+                        processMainPages()
+                        sendMessage("Первая ступень отработала", "${EMOJI_GHOST}")
+                    }
+                }
+                stage('Additional Pages') {
+                    steps {
+                        processAdditionalPages()
+                        sendMessage("Вторая ступень отработала", "${EMOJI_GHOST}")
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            sendMessage('One way or another, I have finished', "${EMOJI_GHOST}")
+            deleteDir() /* clean up our workspace */
+
+        }
+
+//        success {
+
+//             echo 'I succeeded!'
+//         }
+//         unstable {
+//             echo 'I am unstable :/'
+//                }
+        failure {
+//             https://slack.com/api/chat.command?token=LIcO3FGDD72kMkAN3dGENzjj&chanel=#wls-deploy&command=/giphy alarm
+            sendMessage("I failed :( ", "${EMOJI_HANKEY}")
+            executeOnServer("${DOCKER_COMPOSE} start cron")
+            executeOnServer("${MAGENTO} maintenance:disable")
+
+        }
+
+//         changed {
+//             echo 'Things were different before...'
+//         }
+    }
+}
+
+
+
+def pre(message) {
+    echo "$message"
+}
+
+def executeOnServer(command) {
+    sh "ssh -t -p ${STG_SERVER_PORT} ${STG_SERVER_USER}@${STG_SERVER_IP} 'cd ${STG_PROJECT_PATH} && $command'"
+}
+
+def sendMessage(String messageText, icon_emoji) {
+    try {
+        sh "curl -X POST --data-urlencode 'payload={\"channel\": \"${SLACK_CHANNEL}\", \"username\": \"${SLACK_NAME}\", \"text\": \"" + messageText + "\", \"icon_emoji\": \""+ icon_emoji+ "\"}\' ${SLACK_WEBHOOK_URL}"
+    } catch (Exception e) {
+        echo 'Exception occurred: ' + e.toString()
+    }
+}
+
+def getPage(page) {
+    sh "curl -I $page"
+}
+
+def processMainPages() {
+    def mainPageslist = ['','duefte','pflegeprodukte','make-up','sale','marken','ourstores','damenduefte','damen-parfum','duftsets-damen','damen-deodorants','damen-duschpflege','damen-koerperpflege','damen-koerperoel','damen-seife','herrenduefte','herren-parfum','duftsets-herren','after-shave','herren-duschpflege','herren-deodorants','herren-koerperpflege','herren-seife']
+
+    for(item in mainPageslist) {
+        getPage("${STG_SERVER_DOMAIN}$item")
+    }
+}
+
+def processAdditionalPages() {
+    def additionalPageslist = ['gesichtspflege','reinigung','tagespflege','nachtpflege','24h-pflege','anti-aging-pflege','augenpflege','masken-seren','lippenpflege','dekollete-pflege','bb-cream','hautpflege-cc-cream','spezial-gesichtspflege','gesicht-sets','koerperpflege-hautpflege','hautpflege','duschgel','anti-cellulite','koerper-deodorants','koerperpflegeset']
+
+    for(item in additionalPageslist) {
+        getPage("${STG_SERVER_DOMAIN}$item")
+    }
+}
+
+def getLastCommitMessage() {
+    script {
+        println("git log --oneline ${GIT_PREVIOUS_SUCCESSFUL_COMMIT}..HEAD")
+        commits = sh(
+                script: "git log --oneline ${GIT_PREVIOUS_SUCCESSFUL_COMMIT}..HEAD",
+                returnStdout: true
+        )
+        println "Commits are: $commits"
+        return commits
+    }
+}
+
+// def getChangeString() {
+//     MAX_MSG_LEN = 100
+//     def changeString = ""
+//
+//     echo "Gathering SCM changes"
+//     def changeLogSets = currentBuild.rawBuild.changeSets
+//     for (int i = 0; i < changeLogSets.size(); i++) {
+//         def entries = changeLogSets[i].items
+//         for (int j = 0; j < entries.length; j++) {
+//             def entry = entries[j]
+//             truncated_msg = entry.msg.take(MAX_MSG_LEN)
+//             changeString += " - ${truncated_msg} [${entry.author}]\n"
+//         }
+//     }
+//
+//     if (!changeString) {
+//         changeString = " - No new changes"
+//     }
+//     return changeString
+// }

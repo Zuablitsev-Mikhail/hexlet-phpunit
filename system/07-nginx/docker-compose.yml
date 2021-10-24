@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  app:
+    build: ./docker/nginx
+    restart: always
+#    networks:
+#      - parfum
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes: &appvolumes
+      - ~/.composer:/var/www/.composer:delegated
+      - ../../shared-files/ssl-cert:/var/www/ssl-cert
+      - ../../shared-files/logs/nginx:/var/log/nginx
+      - ../../src:/var/www/html
+#      - ../../parfum/app/pub/media/:/var/www/html/pub/media
+#      - ../../parfum/app/pub/static/:/var/www/html/pub/static
+
+#networks:
+# parfum:

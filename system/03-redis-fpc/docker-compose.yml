@@ -1,0 +1,27 @@
+# Version 1.0 intexsoft.com
+version: "3"
+
+services:
+
+#  redis-fpc:
+#    image: redis:5.0
+#    restart: always
+#    ports:
+#      - 6380:6379
+#    networks:
+#      - parfum
+
+  redis-fpc:
+    build: ./
+    restart: always
+    privileged: true
+    command: sh -c "./init.sh"
+    volumes:
+      - ./redislog/:/var/log/redis/
+    ports:
+      - 6380:6379
+    networks:
+      - parfum
+
+networks:
+  parfum:

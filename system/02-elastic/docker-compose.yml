@@ -1,0 +1,20 @@
+# Version 1.0 intexsoft.com
+version: "3"
+
+services:
+  elasticsearch:
+    build: ./docker/elasticsearch
+    restart: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticdata:/usr/share/elasticsearch
+    networks:
+      - parfum
+
+volumes:
+  elasticdata:
+
+networks:
+  parfum:

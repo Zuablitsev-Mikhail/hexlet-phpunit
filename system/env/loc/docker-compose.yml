@@ -1,0 +1,82 @@
+# Version 1.0.1 Staging
+
+version: "3"
+
+services:
+  phpfpm:
+    build: ./system/05-fpm/docker/php
+    ports:
+      - 9000:9000
+    environment:
+      - PHP_PORT=9000
+      - PHP_PM=ondemand
+      - PHP_PM_MAX_CHILDREN=8
+      - PHP_PM_START_SERVERS=3
+      - PHP_PM_MIN_SPARE_SERVERS=2
+      - PHP_PM_MAX_SPARE_SERVERS=5
+      - APP_MAGE_MODE=production
+    links:
+      - db
+    volumes: &appvolumes
+      - ~/.composer:/var/www/.composer:delegated
+      - ./src:/var/www/html
+      - ./shared-files/ssl-cert:/var/www/ssl-cert
+      - ./shared-files/logs/php:/var/log/php
+      - ./shared-files/media:/var/www/html/pub/media
+    networks:
+      - parfum
+
+  #   Disabling cron by default as it uses higher CPU, enable if needed
+#  cron:
+#    build: ./system/05-fpm/docker/php
+#    user: root
+#    command: /usr/local/bin/cronstart
+#    tty: true
+##    links:
+##      - db
+#    volumes: *appvolumes
+#    networks:
+#      - parfum
+
+  db:
+    build: ./system/01-database/docker/mysql
+    ports:
+      - "3306:3306"
+#    env_file: docker/mysql/db.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=magento2
+      - MYSQL_DATABASE=magento2
+      - MYSQL_USER=magento2
+      - MYSQL_PASSWORD=magento2
+      - MYSQL_AIO=0
+    volumes:
+      - ./shared-files/logs/mysql:/var/log/mysql
+      - ./shared-files/database:/var/lib/mysql
+      - ./shared-files/dump/:/tmp/dump
+    networks:
+      - parfum
+
+  redis-fpc:
+    image: redis:5.0
+    networks:
+      - parfum
+
+  elasticsearch:
+    build: ./system/02-elastic/docker/elasticsearch
+#    ports:
+#      - "9200:9200"
+#      - "9300:9300"
+    volumes:
+      - elasticdata:/usr/share/elasticsearch
+    networks:
+      - parfum
+
+
+networks:
+  parfum:
+
+volumes:
+  #appdata:
+  #dbdata:
+  sockdata:
+  elasticdata:

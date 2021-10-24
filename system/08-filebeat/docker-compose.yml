@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  filebeat:
+    build: ./docker/filebeat
+    restart: always
+    container_name: parfuemerie_filebeat
+    volumes:
+      - /home/intexsoft/parfum/app/shared-files/logs/nginx:/var/log/nginx
+      - /home/intexsoft/parfum/app/shared-files/logs/php:/var/log/php
+      - /home/intexsoft/parfum/app/src/var/log:/var/log/parfum
+      - /home/intexsoft/parfum/app/src/var/import/logs/:/var/log/import/
+      - /var/log/:/var/log/system/
+    networks:
+      - filebeat
+
+networks:
+  filebeat:
+    driver: bridge
